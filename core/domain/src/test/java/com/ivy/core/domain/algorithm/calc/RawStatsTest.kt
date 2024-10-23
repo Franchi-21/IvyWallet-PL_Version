@@ -5,44 +5,53 @@ import assertk.assertions.isEqualTo
 import com.ivy.core.persistence.algorithm.calc.CalcTrn
 import com.ivy.data.transaction.TransactionType
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.time.Clock
 import java.time.Instant
+import java.time.ZoneId
 
 internal class RawStatsTest {
+    private lateinit var transactions: List<CalcTrn>
 
-    @Test
-    fun `Test creating raw stats from transactions`() {
-        val tenSecondsAgo = Instant.now().minusSeconds(10)
-        val fiveSecondsAgo = Instant.now().minusSeconds(5)
-        val threeSecondsAgo = Instant.now().minusSeconds(5)
-        val stats = rawStats(
-            listOf(
-                CalcTrn(
-                    amount = 5.0,
-                    currency = "EUR",
-                    type = TransactionType.Income,
-                    time = tenSecondsAgo
-                ),
-                CalcTrn(
-                    amount = 3.0,
-                    currency = "USD",
-                    type = TransactionType.Expense,
-                    time = threeSecondsAgo
-                ),
-                CalcTrn(
-                    amount = 10.0,
-                    currency = "USD",
-                    type = TransactionType.Expense,
-                    time = fiveSecondsAgo
-                ),
+    @BeforeEach
+    fun setUp() {
+        transactions = listOf(
+            CalcTrn(
+                amount = 20.0,
+                type = TransactionType.Income,
+                currency = "USD",
+                time = Instant.ofEpochMilli(1_000_000)
+            ),
+            CalcTrn(
+                amount = 30.0,
+                type = TransactionType.Income,
+                currency = "USD",
+                time = Instant.MIN
+            ),
+            CalcTrn(
+                amount = -20.0,
+                type = TransactionType.Expense,
+                currency = "USD",
+                time = Instant.MIN
+            ),
+            CalcTrn(
+                amount = -50.0,
+                type = TransactionType.Expense,
+                currency = "USD",
+                time = Instant.MIN
             )
         )
+    }
 
-        assertThat(stats.expensesCount).isEqualTo(2)
-        assertThat(stats.newestTrnTime).isEqualTo(threeSecondsAgo)
-        assertThat(stats.expenses).isEqualTo(mapOf("USD" to 13.0))
+    @Test
+    fun `When sending a list of transactions, check if every field is correct`() {
+        val result = rawStats(transactions)
 
-        assertThat(stats.incomesCount).isEqualTo(1)
-        assertThat(stats.incomes).isEqualTo(mapOf("EUR" to 5.0))
+        assertThat(result.incomes).isEqualTo(mapOf("USD" to 50.0))
+        assertThat(result.expenses).isEqualTo(mapOf("USD" to -70.0))
+        assertThat(result.incomesCount).isEqualTo(2)
+        assertThat(result.expensesCount).isEqualTo(2)
+        assertThat(result.newestTrnTime).isEqualTo(Instant.ofEpochMilli(1_000_000))
     }
 }

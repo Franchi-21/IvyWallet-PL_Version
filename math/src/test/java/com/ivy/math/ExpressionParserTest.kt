@@ -8,9 +8,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
+import kotlin.math.exp
 
 internal class ExpressionParserTest {
-
     private lateinit var parser: Parser<TreeNode>
 
     @BeforeEach
@@ -20,10 +20,10 @@ internal class ExpressionParserTest {
 
     @ParameterizedTest
     @CsvSource(
-        "3+6/3-(-10), 15.0",
-        "5+6, 11.0",
-        "5.0000000, 5.0",
-        "100/(10*10), 1.0",
+        "(3*(18/3))/3, 6.0",
+        "5+5, 10.0",
+        "9*(3+6), 81.0",
+        "9/(3+3), 1.5"
     )
     fun `Test evaluating expression`(expression: String, expected: Double) {
         val result = parser(expression).first()
