@@ -10,7 +10,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 internal class SyncExchangeRatesActTest {
-
     private lateinit var syncExchangeRatesAct: SyncExchangeRatesAct
     private lateinit var exchangeProviderFake: RemoteExchangeProviderFake
     private lateinit var exchangeRateDaoFake: ExchangeRateDaoFake
@@ -33,7 +32,6 @@ internal class SyncExchangeRatesActTest {
             .findAllByBaseCurrency("USD")
             .first { it.isNotEmpty() }
         val cadRate = usdRates.find { it.currency == "CAD" }
-
         assertThat(cadRate).isNull()
     }
 
@@ -46,7 +44,6 @@ internal class SyncExchangeRatesActTest {
             .first { it.isNotEmpty() }
         val eurRate = usdRates.find { it.currency == "EUR" }
         val audRate = usdRates.find { it.currency == "AUD" }
-
         assertThat(eurRate).isNotNull()
         assertThat(audRate).isNotNull()
     }

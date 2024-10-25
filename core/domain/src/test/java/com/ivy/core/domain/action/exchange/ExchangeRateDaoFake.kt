@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 
-class ExchangeRateDaoFake: ExchangeRateDao {
+class ExchangeRateDaoFake : ExchangeRateDao {
 
     private val rates = MutableStateFlow<List<ExchangeRateEntity>>(emptyList())
 

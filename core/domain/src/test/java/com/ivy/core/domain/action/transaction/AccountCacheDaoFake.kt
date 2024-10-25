@@ -8,31 +8,36 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import java.time.Instant
 
-class AccountCacheDaoFake: AccountCacheDao {
+private fun accountCacheEntityDefault() = AccountCacheEntity(
+    accountId = "-1",
+    incomesCount = Int.MIN_VALUE,
+    expensesCount = Int.MIN_VALUE,
+    timestamp = Instant.MIN,
+    expensesJson = "",
+    incomesJson = ""
+)
 
-    private val accounts = MutableStateFlow<List<AccountCacheEntity>>(emptyList())
+class AccountCacheDaoFake : AccountCacheDao {
+    private val account = MutableStateFlow(accountCacheEntityDefault())
 
     override fun findAccountCache(accountId: String): Flow<AccountCacheEntity?> {
-        return accounts
-            .map { entities ->
-                entities.find { it.accountId == accountId }
-            }
+       return account.filter { it.accountId == accountId }
     }
 
     override suspend fun findTimestampById(accountId: String): Instant? {
-        return accounts.value.find { it.accountId == accountId }?.timestamp
+        val acc = account.value
+        return if (acc.accountId == accountId) acc.timestamp else null
     }
 
     override suspend fun save(cache: AccountCacheEntity) {
-        accounts.value += cache
+        account.value = cache
     }
 
     override suspend fun delete(accountId: String) {
-        val account = accounts.value.find { it.accountId == accountId } ?: return
-        accounts.value -= account
+        account.value = accountCacheEntityDefault()
     }
 
     override suspend fun deleteAll() {
-        accounts.value = emptyList()
+        account.value = accountCacheEntityDefault()
     }
 }

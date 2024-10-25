@@ -7,23 +7,46 @@ import com.ivy.core.persistence.entity.attachment.AttachmentEntity
 import com.ivy.core.persistence.entity.trn.TransactionEntity
 import com.ivy.core.persistence.entity.trn.TrnMetadataEntity
 import com.ivy.core.persistence.entity.trn.TrnTagEntity
+import com.ivy.core.persistence.entity.trn.data.TrnTimeType
 import com.ivy.data.SyncState
+import com.ivy.data.transaction.TransactionType
+import com.ivy.data.transaction.TrnPurpose
+import com.ivy.data.transaction.TrnState
+import com.ivy.tag
+import java.time.Instant
 
-class TransactionDaoFake: TransactionDao() {
 
-    val transactions = mutableListOf<TransactionEntity>()
-    val tags = mutableListOf<TrnTagEntity>()
-    val attachments = mutableListOf<AttachmentEntity>()
-    val metadatas = mutableListOf<TrnMetadataEntity>()
+private fun transactionEntityDefault() = TransactionEntity(
+    id = "",
+    accountId = "",
+    type = TransactionType.Income,
+    amount = 0.0,
+    currency = "",
+    time = Instant.MIN,
+    timeType = TrnTimeType.Actual,
+    title = "",
+    description = "",
+    categoryId = "",
+    state = TrnState.Default,
+    purpose = TrnPurpose.TransferTo,
+    sync = SyncState.Syncing,
+    lastUpdated = Instant.MIN
+)
+
+class TransactionDaoFake : TransactionDao() {
+    private var transactions = mutableListOf<TransactionEntity>()
+    private var tags = mutableListOf<TrnTagEntity>()
+    private var attachments = mutableListOf<AttachmentEntity>()
+    private var metadata = mutableListOf<TrnMetadataEntity>()
 
     override suspend fun saveTrnEntity(entity: TransactionEntity) {
         transactions.add(entity)
     }
 
     override suspend fun updateTrnTagsSyncByTrnId(trnId: String, sync: SyncState) {
-        val transaction = transactions.find { it.id == trnId } ?: return
-        val index = transactions.indexOf(transaction)
-        transactions[index] = transaction.copy(sync = sync)
+        val transaction = tags.find { trnId == it.trnId } ?: return
+        val index = tags.indexOf(transaction)
+        tags[index] = transaction.copy(sync = sync)
     }
 
     override suspend fun saveTags(entity: List<TrnTagEntity>) {
@@ -44,38 +67,34 @@ class TransactionDaoFake: TransactionDao() {
     }
 
     override suspend fun updateMetadataSyncByTrnId(trnId: String, sync: SyncState) {
-        val metadata = metadatas.find { it.trnId == trnId } ?: return
-        val index = metadatas.indexOf(metadata)
-        metadatas[index] = metadata.copy(sync = sync)
+        val metadata = metadata.find { it.trnId == trnId } ?: return
+        val index = this.metadata.indexOf(metadata)
+        this.metadata[index] = metadata.copy(sync = sync)
     }
 
     override suspend fun saveMetadata(entity: List<TrnMetadataEntity>) {
-        metadatas.addAll(entity)
+        metadata.addAll(entity)
     }
 
     override suspend fun findAllBlocking(): List<TransactionEntity> {
-        return transactions
+        TODO("Not yet implemented")
     }
 
-    // Not supported for fake
     override suspend fun findBySQL(query: SupportSQLiteQuery): List<TransactionEntity> {
         return transactions
     }
 
     override suspend fun findAccountIdAndTimeById(trnId: String): AccountIdAndTrnTime? {
-        val transaction = transactions.find {
-            it.id == trnId && it.sync == SyncState.Deleting
-        } ?: return null
-
+        val acc = transactions.find { it.id == trnId } ?: return null
         return AccountIdAndTrnTime(
-            accountId = transaction.accountId,
-            time = transaction.time,
-            timeType = transaction.timeType
+            accountId = acc.accountId,
+            time = acc.time,
+            timeType = acc.timeType
         )
     }
 
     override suspend fun updateTrnEntitySyncById(trnId: String, sync: SyncState) {
-        val transaction = transactions.find { it.id == trnId } ?: return
+        val transaction = transactions.find { trnId == it.id } ?: return
         val index = transactions.indexOf(transaction)
         transactions[index] = transaction.copy(sync = sync)
     }

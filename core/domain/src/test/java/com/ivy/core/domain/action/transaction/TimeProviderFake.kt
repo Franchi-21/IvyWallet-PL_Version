@@ -5,8 +5,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 
-class TimeProviderFake: TimeProvider {
-
+class TimeProviderFake : TimeProvider {
     override fun timeNow(): LocalDateTime {
         return LocalDateTime.now()
     }
@@ -16,6 +15,6 @@ class TimeProviderFake: TimeProvider {
     }
 
     override fun zoneId(): ZoneId {
-        return ZoneId.of("UTC")
+        return ZoneId.of("America/Argentina/Buenos_Aires")
     }
 }
