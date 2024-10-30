@@ -1,11 +1,11 @@
-@file:OptIn(ExperimentalCoroutinesApi::class)
-
 package com.ivy.exchangeRates
 
 import app.cash.turbine.test
 import assertk.assertThat
 import assertk.assertions.contains
 import assertk.assertions.doesNotContain
+import assertk.assertions.isEmpty
+import assertk.assertions.isEqualTo
 import com.ivy.MainCoroutineExtension
 import com.ivy.core.domain.action.settings.basecurrency.BaseCurrencyFlow
 import com.ivy.core.persistence.algorithm.calc.Rate
@@ -24,41 +24,36 @@ import org.junit.jupiter.api.extension.ExtendWith
 @OptIn(ExperimentalCoroutinesApi::class)
 @ExtendWith(MainCoroutineExtension::class)
 internal class RatesStateFlowTest {
-
-    private lateinit var ratesFlow: RatesStateFlow
-    private lateinit var baseCurrencyFlow: BaseCurrencyFlow
+    private lateinit var ratesStateFlow: RatesStateFlow
     private lateinit var ratesDaoFake: RatesDaoFake
 
     @BeforeEach
     fun setUp() {
-        baseCurrencyFlow = mockk()
-        every { baseCurrencyFlow.invoke() } returns flowOf("", "EUR")
-
         ratesDaoFake = RatesDaoFake()
-
-        ratesFlow = RatesStateFlow(
+        val baseCurrencyFlow = mockk<BaseCurrencyFlow>()
+        every { baseCurrencyFlow() } returns flowOf("", "EUR")
+        ratesStateFlow = RatesStateFlow(
             baseCurrencyFlow = baseCurrencyFlow,
             ratesDao = ratesDaoFake
         )
     }
 
     @Test
-    fun `Test rates flow emissions`() = runTest {
-        ratesFlow().test {
-            awaitItem() // Initial emission
+    fun `When collecting, check if the rates are overridden`() = runTest {
+        ratesStateFlow().test {
+            awaitItem() // Since the first default value is a empty string, only awaits for it.
 
-            val emission1 = awaitItem()
+            val emit1 = awaitItem()
+            assertThat(emit1.baseCurrency).isEqualTo("EUR")
+            assertThat(emit1.manual).contains(RateUi(from = "EUR", to = "EUR", rate = 15.0))
+            assertThat(emit1.automatic).doesNotContain(RateUi(from = "CAD", to = "CAD", rate = 70.0))
 
-            val overriddenRate = RateUi(from = "EUR", to = "USD", rate = 1.3)
-            assertThat(emission1.automatic).doesNotContain(overriddenRate)
-            assertThat(emission1.manual).contains(overriddenRate)
+            ratesDaoFake.overrides.value = emptyList()
 
-            ratesDaoFake.rates.value += Rate(rate = 0.00004, currency = "BTC")
-
-            val emission2 = awaitItem()
-            val rate = RateUi(from = "EUR", to = "BTC", rate = 0.00004)
-            assertThat(emission2.automatic).contains(rate)
-            assertThat(emission2.manual).doesNotContain(rate)
+            val emit2 = awaitItem()
+            assertThat(emit2.baseCurrency).isEqualTo("EUR")
+            assertThat(emit2.manual).isEmpty()
+            assertThat(emit2.automatic).contains(RateUi(from = "EUR", to = "EUR", rate = 20.0))
         }
     }
 }

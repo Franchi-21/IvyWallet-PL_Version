@@ -7,6 +7,7 @@ import com.ivy.core.persistence.dao.exchange.ExchangeRateDao
 import com.ivy.core.persistence.dao.exchange.ExchangeRateOverrideDao
 import com.ivy.data.exchange.ExchangeRates
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -34,7 +35,7 @@ class ExchangeRatesFlow @Inject constructor(
         rates = emptyMap()
     )
 
-    @OptIn(FlowPreview::class)
+    @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
     override fun createFlow(): Flow<ExchangeRates> =
         baseCurrencyFlow().flatMapLatest { baseCurrency ->
             combine(

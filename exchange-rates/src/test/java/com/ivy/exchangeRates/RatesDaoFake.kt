@@ -5,29 +5,36 @@ import com.ivy.core.persistence.algorithm.calc.RatesDao
 import com.ivy.data.CurrencyCode
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 
 class RatesDaoFake: RatesDao {
-
-    var rates = MutableStateFlow(
+    val rates = MutableStateFlow(
         listOf(
-            Rate(1.0, "EUR"),
-            Rate(1.2, "USD"),
-            Rate(1.8, "CAD"),
+            Rate(currency = "EUR", rate = 20.0),
+            Rate(currency = "USD", rate = 50.0),
+            Rate(currency = "CAD", rate = 70.0),
         )
     )
 
-    var overrides = MutableStateFlow(
+    val overrides = MutableStateFlow(
         listOf(
-            Rate(1.3, "USD"),
+            Rate(currency = "EUR", rate = 15.0),
+            Rate(currency = "USD", rate = 17.0),
         )
     )
 
     override fun findAll(baseCurrency: CurrencyCode): Flow<List<Rate>> {
-        return rates
+        return rates.map { rate ->
+            rate.filter { it.currency == baseCurrency }
+        }
     }
 
     override fun findAllOverrides(baseCurrency: CurrencyCode): Flow<List<Rate>> {
-        return overrides
+        return overrides.map { rate ->
+            rate.filter { it.currency == baseCurrency }
+        }
     }
+
 }

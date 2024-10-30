@@ -83,5 +83,4 @@ class WriteTrnsBatchAct @Inject constructor(
             }
         )
     }
-
 }
