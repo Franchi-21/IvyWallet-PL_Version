@@ -17,5 +17,4 @@ import javax.inject.Singleton
 abstract class TestCommonModuleDI {
     @Binds
     abstract fun timeProvider(provider: TimeProviderFake): TimeProvider
-
 }

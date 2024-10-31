@@ -24,8 +24,7 @@ import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltAndroidTest
-class WriteAccountsActTest: IvyAndroidTest() {
-
+class WriteAccountsActTest : IvyAndroidTest() {
     @Inject
     lateinit var writeAccountsAct: WriteAccountsAct
 
@@ -73,7 +72,9 @@ class WriteAccountsActTest: IvyAndroidTest() {
                 color = it.color,
                 icon = it.icon,
                 excluded = it.excluded,
-                folderId = it.folderId?.let { UUID.fromString(it) },
+                folderId = it.folderId?.let { id ->
+                    UUID.fromString(id)
+                },
                 orderNum = it.orderNum,
                 state = it.state,
                 sync = Sync(
